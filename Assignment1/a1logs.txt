@@ -1,0 +1,10 @@
+Regression Attempted at 2023-06-06 19:31:19.448202
+Learn Rate: 0.0008
+Starting Weights (all): 0.5
+Iterations: 10
+Error: 2.4579061917952967e+77
+Regression Attempted at 2023-06-06 19:32:02.326456
+Learn Rate: 0.0008
+Starting Weights (all): 0.5
+Iterations: 100
+Error: nan
