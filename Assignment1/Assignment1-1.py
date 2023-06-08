@@ -1,8 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 import numpy as np
-import string
 import datetime
 
 '''
@@ -23,7 +21,7 @@ Attribute Information:
    9. PRP: published relative performance (integer)
   10. ERP: estimated relative performance from the original article (integer) 
 '''
-path = 'https://archive.ics.uci.edu/ml/machine-learning-databases/cpu-performance/machine.data'
+path = './machine.data'
 '''
 Part 2: Pre-processing 
 We create a dataframe from the data that includes all columns except for the 
@@ -47,40 +45,55 @@ Part 3: Training and Test Data
 Although SciKit Learn has linear regression libraries, we're just using it here
 to divide the data into 80% training data and 20% testing data.
 '''
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
+testsize = .5
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testsize, random_state=5)
 '''
 Part 4: Train a linear regression model
 We train our linear regression model using code from the gradient descent lab done 
 in class, modified for our use case. 
 '''
-def ssr_gradient(x, w):
-    res = w[0] + w[1] * x['MYCT'] \
+def ssr_gradient(x, w, lr):
+    y_pred = w[0] + w[1] * x['MYCT'] \
           + w[2] * x['MMIN'] \
           + w[3] * x['MMAX'] \
           + w[4] * x['CACH'] \
           + w[5] * x['CHMIN'] \
-          + w[6] * x['CHMAX'] \
-          - x['PRP']
-    return res.mean(), (res * x['MYCT']).mean(), \
-        (res * x['MMIN']).mean(), (res * x['MMAX']).mean(), \
-        (res * x['CACH']).mean(), (res * x['CHMIN']).mean(), \
-        (res * x['CHMAX']).mean()
+          + w[6] * x['CHMAX']
+    loss = x['PRP']
+    ly = 2 * loss
+    yw0 = 1
+    yw1 = x['MYCT']
+    yw2 = x['MMIN']
+    yw3 = x['MMAX']
+    yw4 = x['CACH']
+    yw5 = x['CHMIN']
+    yw6 = x['CHMAX']
+    w0up = w[0] - lr * (ly * yw0)
+    w1up = w[1] - lr * (ly * yw1)
+    w2up = w[2] - lr * (ly * yw2)
+    w3up = w[3] - lr * (ly * yw3)
+    w4up = w[4] - lr * (ly * yw4)
+    w5up = w[5] - lr * (ly * yw5)
+    w6up = w[6] - lr * (ly * yw6)
+    return np.array([w0up, w1up, w2up, w3up, w4up, w5up, w6up]), loss
 def gradient_descent(
      gradient, X, y, start, learn_rate=0.1, n_iter=50, tolerance=1e-06
  ):
     vector = start
     tempdf = pd.concat([X, y], axis=1, join='inner')
+    go = True
     for _ in range(n_iter):
         for index, row in tempdf.iterrows():
-            diff = -learn_rate * np.array(gradient(row, vector))
-        if np.all(np.abs(diff) <= tolerance):
+            vector, loss = gradient(row, vector, learn_rate)
+            if np.all(np.abs(loss) <= tolerance):
+                go = False
+        if go == False:
             break
-        vector += diff
     return vector
 
-learnrate = 0.0008
-startweights = 0.5
-iterations = 100
+learnrate = 0.000000000008
+startweights = 10
+iterations = 20000
 model = gradient_descent(
     ssr_gradient, X_train, y_train,
     start=[startweights, startweights, startweights, startweights, startweights, startweights, startweights],
@@ -107,6 +120,7 @@ Part 6: Document attempts and discern quality
 '''
 f = open("a1logs.txt", "a")
 f.write("Regression Attempted at " + str(datetime.datetime.now()))
+f.write("\nTrain to Test Ratio: " + str(1-testsize) + "/" + str(testsize))
 f.write("\nLearn Rate: " + str(learnrate))
 f.write("\nStarting Weights (all): " + str(startweights))
 f.write("\nIterations: " + str(iterations))
